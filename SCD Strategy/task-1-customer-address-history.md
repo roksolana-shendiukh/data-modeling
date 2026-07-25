@@ -6,7 +6,7 @@
 
 ## Schema
 
-![schema](./schema.png)
+![schema](./schema21.png)
 
 
 ## Solution
