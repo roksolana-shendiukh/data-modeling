@@ -14,7 +14,7 @@ This design uses `fact_reservation` as a **bridge table with state**, not just a
 
 - `dim_class` and `dim_session` are split apart: `dim_class` is the catalog entry (yoga, spinning), `dim_session` is a single dated, timed occurrence tied to one studio and one instructor. This is what makes the calendar queryable independently of the class catalog.
 - `fact_reservation` is the bridge between `dim_member` and `dim_session`. Neither `session_sk` nor `member_sk` is unique on its own – a session holds many reservations (up to capacity), and a member holds many reservations over time. The relationship itself is what's unique: one active reservation per (member, session) pair.
-- The bridge doesn't just link two keys – it carries **state that changes over the life of the booking**: `status` (waitlisted → confirmed → attended / no-show / cancelled), `waitlist_position` for ordering promotion, and timestamps (`booked_at`, `checked_in_at`, `cancelled_at`) that pin down exactly when each transition happened.
+- The bridge doesn't just link two keys – it carries **state that changes over the life of the booking**: `status` (waitlisted -> confirmed -> attended / no-show / cancelled), `waitlist_position` for ordering promotion, and timestamps (`booked_at`, `checked_in_at`, `cancelled_at`) that pin down exactly when each transition happened.
 - `fact_membership_history` is a second, independent bridge – this one between `dim_member` and `dim_pricing_tier` – using `start_date`/`end_date` to implement SCD Type 2 on the membership relationship itself, separate from the reservation lifecycle entirely.
 
 ## Why a bridge table, specifically (not a plain FK on the fact table)
@@ -27,9 +27,9 @@ The naive answer to "members book sessions" is "put `member_sk` and `session_sk`
 
 ## Per-attribute framing (the strong-hire answer)
 
-- **Reservation status → lives on the bridge (`fact_reservation`)**: it's the state of the *relationship* between a member and a session, not an attribute of either one. It changes independently and needs its own timestamps.
-- **Pricing tier → its own bridge (`fact_membership_history`), Type 2**: a member's tier changes over time and needs to be reconstructable at any point (e.g., "what was their monthly fee when they signed up"), same reasoning as the address-history bridge – don't force it to piggyback on `dim_member`.
-- **Session capacity / instructor / studio → stay as plain FKs on `dim_session`**: these don't change after a session is scheduled, so there's no bridge or versioning needed – a session either has an instructor or it doesn't, and reassigning one just overwrites the FK (Type 1).
+- **Reservation status -> lives on the bridge (`fact_reservation`)**: it's the state of the *relationship* between a member and a session, not an attribute of either one. It changes independently and needs its own timestamps.
+- **Pricing tier -> its own bridge (`fact_membership_history`), Type 2**: a member's tier changes over time and needs to be reconstructable at any point (e.g., "what was their monthly fee when they signed up"), same reasoning as the address-history bridge – don't force it to piggyback on `dim_member`.
+- **Session capacity / instructor / studio -> stay as plain FKs on `dim_session`**: these don't change after a session is scheduled, so there's no bridge or versioning needed – a session either has an instructor or it doesn't, and reassigning one just overwrites the FK (Type 1).
 
 ## Failure mode this pattern avoids
 
