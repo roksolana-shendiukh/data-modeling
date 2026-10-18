@@ -1,4 +1,4 @@
-# Task 1: Marketplace Orders and Returns (Conformed Dimensions)
+# Task 1: Marketplace Orders and Returns 
 
 ## Task
 
@@ -60,15 +60,13 @@ LEFT JOIN returns r USING (dim_customer_sk, year, month_number);
 | Decision | Why |
 |---|---|
 | **Conformed `dim_customer`, `dim_product`, `dim_date`** | One definition and one surrogate key in both facts, so counts match and purchases can be compared with returns. |
-| **Two facts, not one** | Different grains, dates and measures. A single table would need nullable columns and make `SUM` and `COUNT` ambiguous. |
+| **Two facts, not one** | Different grains, dates and measures. A single table would need nullable columns and make `SUM` and `COUNT` ambiguous. They are joined only through drill-across, because a direct join multiplies rows (fan-out) and inflates measures. |
 | **Both are transaction facts** | An order line and a returned item are one-time events, not periodic summaries. |
 | **Grain** | Sale: one row per order line. Return: one row per returned item. |
 | **Own event date per fact** | Order date for sales, return date for returns. A refund appears in the month it was issued. |
 | **Degenerate `order_number`, `return_number`** | Document identifiers with no descriptive attributes. They stay in the fact. |
 | **Business key in each dimension** | Allows the same entity to be recognized across source systems. |
 
-## Key Points
+## Watch Out
 
-- Dimensions are shared, facts differ by process and grain.
-- Facts are never joined directly: the join multiplies rows (fan-out) and inflates measures. Drill-across avoids it.
 - Definitions such as "active customer" belong in fact or metrics logic, not in the dimension.
